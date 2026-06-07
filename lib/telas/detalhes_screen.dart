@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../modelos/filmes.dart';
 
 class DetalhesScreen extends StatelessWidget {
-  // REQUISITO: Passagem de Parâmetros entre telas
   final Filme filmeSelecionado;
 
   const DetalhesScreen({super.key, required this.filmeSelecionado});

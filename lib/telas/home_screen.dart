@@ -37,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Catálogo de Filmes"),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      // REQUISITO: Drawer no Scaffold
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -101,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
               itemCount: _filmes.length,
               itemBuilder: (context, index) {
                 final filme = _filmes[index];
-                return FilmeCard( // Uso do componente separado
+                return FilmeCard(
                   filme: filme,
                   onToggleAssistido: () async {
                     filme.assistido = !filme.assistido;
@@ -113,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     _atualizarLista();
                   },
                   onTap: () {
-                    // Passagem de parâmetro para a tela 2
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => DetalhesScreen(filmeSelecionado: filme)),

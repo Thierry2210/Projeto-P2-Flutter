@@ -33,7 +33,6 @@ class DAO {
       final dados = {"titulo": filme.titulo, "genero": filme.genero, "assistido": filme.assistido ? 1 : 0};
       return await db.insert("filmes", dados);
     } catch (e) {
-      // Se falhar (ex: web), usar mock
       _filmesMock.add(Filme(
         id: _filmesMock.length + 1,
         titulo: filme.titulo,
@@ -50,7 +49,6 @@ class DAO {
       List<Map<String, dynamic>> maps = await db.query("filmes", orderBy: "titulo");
       return maps.map((map) => Filme.fromMap(map)).toList();
     } catch (e) {
-      // Se falhar (ex: web), retornar mock
       return _filmesMock;
     }
   }
@@ -61,7 +59,6 @@ class DAO {
       final dados = {"titulo": filme.titulo, "genero": filme.genero, "assistido": filme.assistido ? 1 : 0};
       return await db.update("filmes", dados, where: "id = ?", whereArgs: [filme.id]);
     } catch (e) {
-      // Se falhar (ex: web), atualizar mock
       for (int i = 0; i < _filmesMock.length; i++) {
         if (_filmesMock[i].id == filme.id) {
           _filmesMock[i] = filme;
@@ -78,7 +75,6 @@ class DAO {
       await db.delete("filmes", where: "id = ?", whereArgs: [id]);
       return true;
     } catch (erro) {
-      // Se falhar (ex: web), remover do mock
       _filmesMock.removeWhere((f) => f.id == id);
       debugPrint("Falha na exclusão: $erro");
       return true;
