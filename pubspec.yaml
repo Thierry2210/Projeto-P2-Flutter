@@ -1,5 +1,5 @@
 name: p2_flutter
-description: "A new Flutter project."
+description: "App catálogo de usuários com API REST, banco de dados local e animações."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -11,6 +11,9 @@ dependencies:
     sdk: flutter
   google_fonts: ^8.1.0
   http: ^1.6.0
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:

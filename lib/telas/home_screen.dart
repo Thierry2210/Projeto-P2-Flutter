@@ -1,85 +1,128 @@
 import 'package:flutter/material.dart';
-import '../servicos/api_service.dart';
-import '../servicos/user_card.dart';
+import '../modelos/filmes.dart';
+import '../banco/dao.dart';
+import '../servicos/filme_card.dart';
 import 'detalhes_screen.dart';
 import 'sobre_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String titulo;
-  const HomeScreen({super.key, required this.titulo});
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ApiService api = ApiService();
-  List<dynamic> users = [];
-  bool isLoading = true;
-  final int _indiceAtual = 0;
+  List<Filme> _filmes = [];
+  final _tituloController = TextEditingController();
+  final _generoController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    carregarDados();
+    _atualizarLista();
   }
 
-  Future<void> carregarDados() async {
-    try {
-      final dados = await api.fetchUsers();
-      setState(() {
-        users = dados;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
-    }
-  }
-
-  void _onTabTapped(int index) {
-    if (index == 1) {
-      // Navegação para a tela 3 passando parâmetros
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SobreScreen(versaoApp: '1.0.0'),
-        ),
-      );
-    }
+  void _atualizarLista() async {
+    final lista = await DAO.obterTodos();
+    setState(() {
+      _filmes = lista;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.titulo)),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: users.length,
+      appBar: AppBar(
+        title: const Text("Catálogo de Filmes"),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      // REQUISITO: Drawer no Scaffold
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.deepPurple),
+              child: Text('Menu P2', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Sobre o App'),
+              onTap: () {
+                Navigator.pop(context); // Fecha o menu
+                // Passagem de parâmetro para a tela 3
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SobreScreen(nomeEquipe: "Seu Nome Aqui")),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _tituloController,
+                    decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "Título"),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _generoController,
+                    decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "Gênero (Ex: Ação)"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_tituloController.text.isNotEmpty && _generoController.text.isNotEmpty) {
+                var novoFilme = Filme(id: 0, titulo: _tituloController.text, genero: _generoController.text, assistido: false);
+                await DAO.incluir(novoFilme);
+                _tituloController.clear();
+                _generoController.clear();
+                _atualizarLista();
+              }
+            },
+            child: const Text("Adicionar Filme"),
+          ),
+          const Divider(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filmes.length,
               itemBuilder: (context, index) {
-                final user = users[index];
-                return UserCard(
-                  nome: user['name'],
-                  email: user['email'],
+                final filme = _filmes[index];
+                return FilmeCard( // Uso do componente separado
+                  filme: filme,
+                  onToggleAssistido: () async {
+                    filme.assistido = !filme.assistido;
+                    await DAO.alterar(filme);
+                    _atualizarLista();
+                  },
+                  onDelete: () async {
+                    await DAO.excluir(filme.id);
+                    _atualizarLista();
+                  },
                   onTap: () {
-                    // Navegação para a tela 2 com passagem de parâmetros
+                    // Passagem de parâmetro para a tela 2
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => DetalhesScreen(usuario: user),
-                      ),
+                      MaterialPageRoute(builder: (context) => DetalhesScreen(filmeSelecionado: filme)),
                     );
                   },
                 );
               },
             ),
-      // Uso do componente exigido
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _indiceAtual,
-        onTap: _onTabTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Sobre'),
+          )
         ],
       ),
     );

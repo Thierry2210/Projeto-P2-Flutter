@@ -1,24 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io' show Platform;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'telas/home_screen.dart';
 
 void main() {
-  runApp(const MeuAppP2());
+  // Inicializa sqflite apenas para desktop/mobile
+  if (!kIsWeb) {
+    sqfliteFfiInit();
+  }
+  runApp(const P2App());
 }
 
-class MeuAppP2 extends StatelessWidget {
-  const MeuAppP2({super.key});
+// Verifica se está rodando na web
+const kIsWeb = identical(0, 0.0);
+
+class P2App extends StatelessWidget {
+  const P2App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'App P2',
+      debugShowCheckedModeBanner: false,
+      title: 'Catálogo de Filmes',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // Uso de biblioteca do pub.dev (Google Fonts)
-        textTheme: GoogleFonts.latoTextTheme(),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        textTheme: GoogleFonts.poppinsTextTheme(), // Biblioteca do Pub.dev
       ),
-      home: const HomeScreen(titulo: 'Catálogo de Usuários'), // Parâmetro passado
+      home: const HomeScreen(),
     );
   }
 }
