@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import "package:sqflite/sqflite.dart" as sql;
-import "../modelos/filmes.dart";
+import "../models/filme.dart";
 import "dart:async";
 
 List<Filme> _filmesMock = [];
@@ -12,7 +12,8 @@ class DAO {
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         titulo TEXT NOT NULL,
         genero TEXT,
-        assistido BOOLEAN
+        assistido BOOLEAN,
+        imagem_url TEXT
       );
     """);
   }
@@ -20,24 +21,29 @@ class DAO {
   static Future<sql.Database> db() async {
     return sql.openDatabase(
       "filmesdb.db",
-      version: 1,
+      version: 2,
       onCreate: (sql.Database database, int version) async {
         await criarTabelas(database);
       },
+      onUpgrade: (sql.Database database, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+          await database.execute("ALTER TABLE filmes ADD COLUMN imagem_url TEXT;");
+        }
+      }
     );
   }
 
   static Future<int> incluir(Filme filme) async {
     try {
       final db = await DAO.db();
-      final dados = {"titulo": filme.titulo, "genero": filme.genero, "assistido": filme.assistido ? 1 : 0};
-      return await db.insert("filmes", dados);
+      return await db.insert("filmes", filme.toMap());
     } catch (e) {
       _filmesMock.add(Filme(
         id: _filmesMock.length + 1,
         titulo: filme.titulo,
         genero: filme.genero,
         assistido: filme.assistido,
+        imagemUrl: filme.imagemUrl,
       ));
       return _filmesMock.length;
     }
@@ -56,8 +62,7 @@ class DAO {
   static Future<int> alterar(Filme filme) async {
     try {
       final db = await DAO.db();
-      final dados = {"titulo": filme.titulo, "genero": filme.genero, "assistido": filme.assistido ? 1 : 0};
-      return await db.update("filmes", dados, where: "id = ?", whereArgs: [filme.id]);
+      return await db.update("filmes", filme.toMap(), where: "id = ?", whereArgs: [filme.id]);
     } catch (e) {
       for (int i = 0; i < _filmesMock.length; i++) {
         if (_filmesMock[i].id == filme.id) {
